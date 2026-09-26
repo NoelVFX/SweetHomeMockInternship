@@ -2008,6 +2008,40 @@ public class PlanComponent extends JComponent implements PlanView, Scrollable, P
    * that makes it fill <code>pageFormat</code> imageable size if this attribute is <code>null</code>.
    */
   public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
+    if (home.getLevels().isEmpty()) {
+      return printSelectedLevel(g, pageFormat, pageIndex);
+    } else {
+      Level oldSelectedLevel = this.home.getSelectedLevel();
+      Graphics2D scratchGraphics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
+      try {
+        int remaining = pageIndex;
+        for (Level level: home.getLevels()) {
+          if (level.isViewable()) {
+            this.home.setSelectedLevel(level);
+            int count = 0;
+            boolean flag = true;
+            while (flag) {
+              int res = printSelectedLevel(scratchGraphics, pageFormat, count);
+              if (res == PAGE_EXISTS) {
+                count++;
+              } else {
+                flag = false;
+              }
+            }
+            if (remaining < count) {
+              return printSelectedLevel(g, pageFormat, remaining);
+            }
+            remaining -= count;
+          }
+        }
+        return NO_SUCH_PAGE;
+      } finally {
+        scratchGraphics.dispose();
+        this.home.setSelectedLevel(oldSelectedLevel);
+      }
+    }
+  }
+  private int printSelectedLevel(Graphics g, PageFormat pageFormat, int pageIndex) {
     List<Selectable> printedItems = getPaintedItems(); 
     Rectangle2D printedItemBounds = getItemsBounds(g, printedItems);
     if (printedItemBounds != null) {
