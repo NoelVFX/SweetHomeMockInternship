@@ -750,8 +750,22 @@ public class FurnitureTable extends JTable implements View, Printable {
           return headerRendererLabel;
         }
       };
+    List<TableColumn> table_column = new ArrayList<>();
     for (int columnIndex = 0, n = columnModel.getColumnCount(); columnIndex < n; columnIndex++) {
       final TableColumn tableColumn = columnModel.getColumn(columnIndex);
+      table_column.add(tableColumn);
+    }
+    TableModel tableModel = getModel();
+    FurnitureTreeTableModel temp = (FurnitureTreeTableModel) tableModel;
+    Home home = (Home) temp.getRoot();
+
+    if (!home.getLevels().isEmpty() && columnModel instanceof FurnitureTableColumnModel && !home.getFurnitureVisibleProperties().contains(HomePieceOfFurniture.SortableProperty.LEVEL)) {
+      FurnitureTableColumnModel temp2 = (FurnitureTableColumnModel) columnModel;
+      Map<HomePieceOfFurniture.SortableProperty, TableColumn> map = temp2.availableColumns;
+      TableColumn level = map.get(HomePieceOfFurniture.SortableProperty.LEVEL);
+      table_column.add(level);
+    }
+    for (final TableColumn tableColumn: table_column) {
       // Create a printable column from existing table column
       TableColumn printableColumn = new TableColumn();
       printableColumn.setIdentifier(tableColumn.getIdentifier());
@@ -778,7 +792,7 @@ public class FurnitureTable extends JTable implements View, Printable {
       // Change printable column header renderer
       printableColumn.setHeaderRenderer(printableHeaderRenderer);
       printableColumnModel.addColumn(printableColumn);
-    }    
+    }
     return print(g, pageFormat, pageIndex, printableColumnModel, Color.BLACK);
   }
 
